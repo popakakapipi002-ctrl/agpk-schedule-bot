@@ -60,17 +60,6 @@ def week(message):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    tables = soup.find_all('table')
-    table = None
-    for t in tables:
-        if 'Дисциплина' in t.text:
-            table = t
-            break
-
-    if not table:
-        bot.send_message(message.chat.id, "Расписание не найдено.")
-        return
-
     all_text = soup.get_text(separator='\n')
     lines = all_text.split('\n')
 
@@ -82,7 +71,7 @@ def week(message):
         if any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']) and '2026' in line:
             result += f"\n{line}\n"
             found = True
-        elif found and line and line[0].isdigit():
+        elif found and line and (line[0].isdigit() or line.startswith('МДК')):
             result += line + '\n'
 
     if not found:

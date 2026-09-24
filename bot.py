@@ -18,7 +18,7 @@ def day(message):
     today = datetime.now().strftime("%d.%m.%Y")
     monday = datetime.now() - timedelta(days=datetime.now().weekday())
     monday_str = monday.strftime("%d.%m.%Y")
-    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}&send=Показать"
+    https://vk.ru/away.php?to=https%3A%2F%2Fwww.aspc-edu.ru%2Finformation%2Fedu%2Fschedule%2F%3Fgroup%3D115748%26date_edu1c%3D%7Btoday%7D%26send%3D%25D0%259F%25D0%25BE%25D0%25BA%25D0%25B0%25D0%25B7%25D0%25B0%25D1%2582%25D1%258C&utf=1
 
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -56,7 +56,7 @@ def week(message):
     # Берём понедельник текущей недели
     monday = datetime.now() - timedelta(days=datetime.now().weekday())
     monday_str = monday.strftime("%d.%m.%Y")
-    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}&send=Показать"
+   https://vk.ru/away.php?to=https%3A%2F%2Fwww.aspc-edu.ru%2Finformation%2Fedu%2Fschedule%2F%3Fgroup%3D115748%26date_edu1c%3D%7Btoday%7D%26send%3D%25D0%259F%25D0%25BE%25D0%25BA%25D0%25B0%25D0%25B7%25D0%25B0%25D1%2582%25D1%258C&utf=1
 
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')

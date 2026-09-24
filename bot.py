@@ -15,69 +15,16 @@ def start(message):
 
 @bot.message_handler(commands=['day'])
 def day(message):
-    today = datetime.now().strftime("%d.%m.%Y")
-    monday = datetime.now() - timedelta(days=datetime.now().weekday())
-    monday_str = monday.strftime("%d.%m.%Y")
-    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={today}"
-
+    url = "https://www.aspc-edu.ru/information/edu/schedule/?group=115748"
     response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Ищем все заголовки с датами (например, "24 СЕНТЯБРЯ 2026, ЧЕТВЕРГ")
-    # Они обычно в <div> или <p> с текстом
-    all_text = soup.get_text(separator='\n')
-    lines = all_text.split('\n')
-
-    target_date = datetime.now().strftime("%d.%m.%Y")
-    result = f"Расписание на {target_date}:\n\n"
-    found = False
-    in_target_day = False
-
-    for line in lines:
-        line = line.strip()
-        # Проверяем, начинается ли строка с даты
-        if target_date in line and ('ПОНЕДЕЛЬНИК' in line or 'ВТОРНИК' in line or 'СРЕДА' in line or 'ЧЕТВЕРГ' in line or 'ПЯТНИЦА' in line or 'СУББОТА' in line):
-            in_target_day = True
-            continue
-        # Если начался новый день — останавливаемся
-        if in_target_day and ('ПОНЕДЕЛЬНИК' in line or 'ВТОРНИК' in line or 'СРЕДА' in line or 'ЧЕТВЕРГ' in line or 'ПЯТНИЦА' in line or 'СУББОТА' in line):
-            break
-        # Собираем строки с парами
-        if in_target_day and line:
-            result += line + '\n'
-            found = True
-
-    if not found:
-        result += "На сегодня пар нет."
-
-    bot.send_message(message.chat.id, result)
+    text = response.text[:1000]
+    bot.send_message(message.chat.id, f"Вот что видит бот:\n\n{text}")
 @bot.message_handler(commands=['week'])
 def week(message):
-    monday = datetime.now() - timedelta(days=datetime.now().weekday())
-    monday_str = monday.strftime("%d.%m.%Y")
-    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}"
-
+    url = "https://www.aspc-edu.ru/information/edu/schedule/?group=115748"
     response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    all_text = soup.get_text(separator='\n')
-    lines = all_text.split('\n')
-
-    result = "Расписание на неделю:\n\n"
-    found = False
-
-    for line in lines:
-        line = line.strip()
-        if any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']) and '2026' in line:
-            result += f"\n{line}\n"
-            found = True
-        elif found and line and (line[0].isdigit() or line.startswith('МДК')):
-            result += line + '\n'
-
-    if not found:
-        result = "Расписание не найдено."
-
-    bot.send_message(message.chat.id, result)
+    text = response.text[:1000]
+    bot.send_message(message.chat.id, f"Вот что видит бот:\n\n{text}")
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')

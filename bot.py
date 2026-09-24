@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import os
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 import telebot
 from flask import Flask, request
 
@@ -54,8 +53,48 @@ def day(message):
     bot.send_message(message.chat.id, result)
 @bot.message_handler(commands=['week'])
 def week(message):
-    bot.send_message(message.chat.id, "Расписание на неделю (пока пусто)")
+    # Берём понедельник текущей недели
+    monday = datetime.now() - timedelta(days=datetime.now().weekday())
+    monday_str = monday.strftime("%d.%m.%Y")
+    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}&send=Показать"
 
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    tables = soup.find_all('table')
+    table = None
+    for t in tables:
+        if 'Дисциплина' in t.text:
+            table = t
+            break
+
+    if not table:
+        bot.send_message(message.chat.id, "Расписание не найдено.")
+        return
+
+    # Берём весь текст страницы, чтобы найти даты
+    all_text = soup.get_text(separator='\n')
+    lines = all_text.split('\n')
+
+    result = "Расписание на неделю:\n\n"
+    current_day = ""
+    found = False
+
+    for line in lines:
+        line = line.strip()
+        # Если строка — это дата (например, "24 СЕНТЯБРЯ 2026, ЧЕТВЕРГ")
+        if any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']) and '2026' in line:
+            current_day = line
+            result += f"\n{current_day}\n"
+            found = True
+        # Если строка — это пара (начинается с цифры)
+        elif found and line and line[0].isdigit():
+            result += line + '\n'
+
+    if not found:
+        result = "Расписание не найдено."
+
+    bot.send_message(message.chat.id, result)
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')

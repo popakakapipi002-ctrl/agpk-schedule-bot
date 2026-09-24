@@ -15,16 +15,61 @@ def start(message):
 
 @bot.message_handler(commands=['day'])
 def day(message):
-    url = "https://www.aspc-edu.ru/information/edu/schedule/?group=115748"
+    today = datetime.now().strftime("%d.%m.%Y")
+    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={today}"
+    
     response = requests.get(url)
-    text = response.text[:1000]
-    bot.send_message(message.chat.id, f"Вот что видит бот:\n\n{text}")
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    all_text = soup.get_text(separator='\n')
+    lines = all_text.split('\n')
+    
+    result = f"Расписание на {today}:\n\n"
+    found = False
+    in_target_day = False
+    
+    for line in lines:
+        line = line.strip()
+        if today in line and any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']):
+            in_target_day = True
+            continue
+        if in_target_day and any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']):
+            break
+        if in_target_day and line:
+            result += line + '\n'
+            found = True
+    
+    if not found:
+        result += "На сегодня пар нет."
+    
+    bot.send_message(message.chat.id, result)
 @bot.message_handler(commands=['week'])
 def week(message):
-    url = "https://www.aspc-edu.ru/information/edu/schedule/?group=115748"
+    monday = datetime.now() - timedelta(days=datetime.now().weekday())
+    monday_str = monday.strftime("%d.%m.%Y")
+    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}"
+    
     response = requests.get(url)
-    text = response.text[:1000]
-    bot.send_message(message.chat.id, f"Вот что видит бот:\n\n{text}")
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    all_text = soup.get_text(separator='\n')
+    lines = all_text.split('\n')
+    
+    result = "Расписание на неделю:\n\n"
+    found = False
+    
+    for line in lines:
+        line = line.strip()
+        if any(day in line for day in ['ПОНЕДЕЛЬНИК', 'ВТОРНИК', 'СРЕДА', 'ЧЕТВЕРГ', 'ПЯТНИЦА', 'СУББОТА']) and '2026' in line:
+            result += f"\n{line}\n"
+            found = True
+        elif found and line and (line[0].isdigit() or line.startswith('МДК')):
+            result += line + '\n'
+    
+    if not found:
+        result = "Расписание не найдено."
+    
+    bot.send_message(message.chat.id, result)
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')

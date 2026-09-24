@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -16,7 +17,10 @@ def start(message):
 @bot.message_handler(commands=['day'])
 def day(message):
     today = datetime.now().strftime("%d.%m.%Y")
-    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={today}&send=Показать"
+    # Берём понедельник текущей недели
+    monday = datetime.now() - timedelta(days=datetime.now().weekday())
+    monday_str = monday.strftime("%d.%m.%Y")
+    url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}&send=Показать"
 
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -35,6 +39,7 @@ def day(message):
     result = f"Расписание на {today}:\n\n"
     rows = table.find_all('tr')
 
+    # Ищем строки с датой и парами
     for row in rows:
         cells = row.find_all('td')
         if len(cells) >= 4:
@@ -46,6 +51,9 @@ def day(message):
                 result += f"{para} пара | {subject} | {room}\n"
                 if teacher:
                     result += f"   Преподаватель: {teacher}\n"
+
+    if result == f"Расписание на {today}:\n\n":
+        result += "На сегодня пар нет."
 
     bot.send_message(message.chat.id, result)
 
@@ -69,9 +77,5 @@ if __name__ == "__main__":
     bot.set_webhook(url="https://agpk-schedule-bot.onrender.com/" + BOT_TOKEN)
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
 
 

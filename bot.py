@@ -17,7 +17,6 @@ def start(message):
 @bot.message_handler(commands=['day'])
 def day(message):
     today = datetime.now().strftime("%d.%m.%Y")
-    # Берём понедельник текущей недели
     monday = datetime.now() - timedelta(days=datetime.now().weekday())
     monday_str = monday.strftime("%d.%m.%Y")
     url = f"https://www.aspc-edu.ru/information/edu/schedule/?group=115748&date_edu1c={monday_str}&send=Показать"
@@ -25,38 +24,34 @@ def day(message):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    tables = soup.find_all('table')
-    table = None
-    for t in tables:
-        if 'Дисциплина' in t.text:
-            table = t
+    # Ищем все заголовки с датами (например, "24 СЕНТЯБРЯ 2026, ЧЕТВЕРГ")
+    # Они обычно в <div> или <p> с текстом
+    all_text = soup.get_text(separator='\n')
+    lines = all_text.split('\n')
+
+    target_date = datetime.now().strftime("%d.%m.%Y")
+    result = f"Расписание на {target_date}:\n\n"
+    found = False
+    in_target_day = False
+
+    for line in lines:
+        line = line.strip()
+        # Проверяем, начинается ли строка с даты
+        if target_date in line and ('ПОНЕДЕЛЬНИК' in line or 'ВТОРНИК' in line or 'СРЕДА' in line or 'ЧЕТВЕРГ' in line or 'ПЯТНИЦА' in line or 'СУББОТА' in line):
+            in_target_day = True
+            continue
+        # Если начался новый день — останавливаемся
+        if in_target_day and ('ПОНЕДЕЛЬНИК' in line or 'ВТОРНИК' in line or 'СРЕДА' in line or 'ЧЕТВЕРГ' in line or 'ПЯТНИЦА' in line or 'СУББОТА' in line):
             break
+        # Собираем строки с парами
+        if in_target_day and line:
+            result += line + '\n'
+            found = True
 
-    if not table:
-        bot.send_message(message.chat.id, "Расписание не найдено.")
-        return
-
-    result = f"Расписание на {today}:\n\n"
-    rows = table.find_all('tr')
-
-    # Ищем строки с датой и парами
-    for row in rows:
-        cells = row.find_all('td')
-        if len(cells) >= 4:
-            para = cells[0].text.strip()
-            subject = cells[2].text.strip()
-            room = cells[3].text.strip()
-            teacher = cells[4].text.strip() if len(cells) > 4 else ""
-            if para and subject and para.isdigit():
-                result += f"{para} пара | {subject} | {room}\n"
-                if teacher:
-                    result += f"   Преподаватель: {teacher}\n"
-
-    if result == f"Расписание на {today}:\n\n":
+    if not found:
         result += "На сегодня пар нет."
 
     bot.send_message(message.chat.id, result)
-
 @bot.message_handler(commands=['week'])
 def week(message):
     bot.send_message(message.chat.id, "Расписание на неделю (пока пусто)")

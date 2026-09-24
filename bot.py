@@ -27,16 +27,14 @@ def getMessage():
 
 @app.route('/health')
 def health():
-    return "OK", 200ss
+    return "OK", 200
 
 if __name__ == "__main__":
     bot.remove_webhook()
-    bot.set_webhook(url="https://НАЗВАНИЕ_ТВОЕГО_СЕРВИСА.onrender.com/" + BOT_TOKEN)
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 app.run - Данный веб-сайт выставлен на продажу! - app Ресурсы и информация.
 app.run
-
 
 
 

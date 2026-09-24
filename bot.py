@@ -21,7 +21,12 @@ def day(message):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    table = soup.find('table')
+    tables = soup.find_all('table')
+    table = None
+    for t in tables:
+        if 'Дисциплина' in t.text:
+            table = t
+            break
 
     if not table:
         bot.send_message(message.chat.id, "Расписание не найдено.")
@@ -36,7 +41,11 @@ def day(message):
             para = cells[0].text.strip()
             subject = cells[2].text.strip()
             room = cells[3].text.strip()
-            result += f"{para} пара | {subject} | {room}\n"
+            teacher = cells[4].text.strip() if len(cells) > 4 else ""
+            if para and subject and para.isdigit():
+                result += f"{para} пара | {subject} | {room}\n"
+                if teacher:
+                    result += f"   Преподаватель: {teacher}\n"
 
     bot.send_message(message.chat.id, result)
 
